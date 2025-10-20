@@ -1,0 +1,14 @@
+[project]
+name = "waifuc-dataset-process"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "hf-xet>=1.1.10",
+    "onnxruntime-gpu==1.20",
+    "waifuc[gpu]",
+]
+
+[tool.uv.sources]
+waifuc = { git = "https://github.com/deepghs/waifuc.git", rev = "main" }
