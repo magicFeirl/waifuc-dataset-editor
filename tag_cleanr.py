@@ -239,7 +239,8 @@ WHITELIST = {
     'outdoors',
     'blood',
     'blood on face',
-    'blood on clothes'
+    'blood on clothes',
+    'heterochromia'
 }
 
 
@@ -296,6 +297,14 @@ class TagCleaner(object):
         #     if not is_delete_tags(tag):
         #         print(f'{tag} {count}')
 
+        print(f"Removing TOP {top_n} MOST COMMON && BLACKLIST tags:")
+        removed_tags_set = set(REMOVE_TAGS)
+
+        for tag, count in most_common_top_n:
+            if is_delete_tags(tag):
+                print(f"Remove {tag}, count: {count}")
+                removed_tags_set.add(tag)
+
         # 其它高频 tags
         common_percent = 0.3
         other_common_tags = [(tag, count) for (tag, count) in most_common if count >= self.file_count * common_percent and not is_delete_tags(tag) and tag not in WHITELIST]
@@ -308,15 +317,9 @@ class TagCleaner(object):
             print(f'No not removed tags >={common_percent * 100}% found')
 
         user_selected_delete_tags = [tag.strip() for tag in input('Select tags to delete: ').split(',')]
+        for tag in user_selected_delete_tags:
+            removed_tags_set.add(tag)
         
-        print(f"Removing TOP {top_n} MOST COMMON && BLACKLIST tags:")
-
-        removed_tags_set = set(REMOVE_TAGS)
-        for tag, count in most_common_top_n:
-            if is_delete_tags(tag) or tag in user_selected_delete_tags:
-                print(f"Remove {tag}, count: {count}")
-                removed_tags_set.add(tag)
-
         with open('removed_tags.json', 'w') as f:
             json.dump(list(removed_tags_set), f)
 

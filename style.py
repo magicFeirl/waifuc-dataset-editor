@@ -28,19 +28,15 @@ def banner(message):
 def run_local_source(source: str, dest: str):
     (LocalSource(source)).attach(
         ModeConvertAction("RGB", "white"),
-        CCIPAction(min_val_count=15),
-        ThreeStageSplitAction(),
-        FilterSimilarAction(threshold=0.35),
         FileOrderAction(),
         # TaggingAction(),
-        FileExtAction(ext=".png"),
+        FileExtAction(ext=".jpg"),
     ).export(TextualInversionExporter(dest))
 
     return dest.absolute()
 
 
 def waifuc(path: str):
-    # [r"E:\dataset\2025年10月12日\bili_girl_22_dress"]:
     path: Path = Path(path)
 
     # 检查是否是不含子文件夹的根文件夹
@@ -59,22 +55,25 @@ def waifuc(path: str):
         else:
             print(f'{dest} existed, skipping waifuc')
 
-        tag_cleaner = TagCleaner()
-        for image_path in Path(dest).glob("*.png"):
-            filename = Path(image_path).with_suffix("")
+        active_tokens = input(f'Active Tokens({source.name}):')
+        if not active_tokens:
+            active_tokens = source.name
+
+        shuffix = ['png', 'webp', 'jpg']
+        files = []
+        for s in shuffix:
+            files.extend(Path(dest).glob(f"*.{s}"))
+
+        for image_path in files:
+            filename = Path(image_path).with_suffix(".txt")
 
             tags = process_image_and_save_tags(
                 image_path=str(image_path),
                 gen_threshold=0.60,
             )
 
-            tag_cleaner.add_tags(filename=filename, tags=tags)
-
-        total_images = tag_cleaner.size
-        banner(f"{dest}: {total_images} image tagged")
-        # remove top 70% tags common and in blacklisted
-        for file, tags in tag_cleaner.get_cleaned_tags(round(total_images * 0.3)):
-            file.with_suffix(".txt").write_text(', '.join(tags))
+            tags = [active_tokens, tags]
+            filename.write_text(', '.join(tags))
 
         print('Output Dir:')
         print(dest.absolute())
@@ -85,5 +84,8 @@ if __name__ == '__main__':
     if len(sys.argv) == 2:
         target = sys.argv[1]
 
-    if target:
+    while target:
         waifuc(target)
+        print()
+        target = input('Input Dir:')
+        print()
