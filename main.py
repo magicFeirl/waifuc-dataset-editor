@@ -30,7 +30,7 @@ def run_local_source(source: str, dest: str):
         ModeConvertAction("RGB", "white"),
         CCIPAction(min_val_count=15),
         ThreeStageSplitAction(),
-        FilterSimilarAction(threshold=0.35),
+        FilterSimilarAction(threshold=0.4),
         FileOrderAction(),
         # TaggingAction(),
         FileExtAction(ext=".png"),
@@ -76,7 +76,8 @@ def waifuc(path: str):
         for file, tags in tag_cleaner.get_cleaned_tags(round(total_images * 0.3)):
             file.with_suffix(".txt").write_text(', '.join(tags))
 
-        print('Output Dir:')
+        print(f'Output Dir({tag_cleaner.file_count} images):')
+        print(dest.name, f'Images Count: {total_images}. Suggest Steps: {total_images * 10}')
         print(dest.absolute())
         
 if __name__ == '__main__':
@@ -85,5 +86,7 @@ if __name__ == '__main__':
     if len(sys.argv) == 2:
         target = sys.argv[1]
 
-    if target:
+    while target:
         waifuc(target)
+        print()
+        target = input('Input Dir:')
