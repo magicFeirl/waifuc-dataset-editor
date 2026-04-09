@@ -1,3 +1,6 @@
+temp_staging_dir
+video-output
+wildcards
 # Python-generated files
 __pycache__/
 *.py[oc]

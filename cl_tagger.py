@@ -352,13 +352,13 @@ def format_tags_to_string(
         for tag, prob in predictions.get(category, []):
             output_tags.append(tag.replace("_", " "))
 
-    return ", ".join(output_tags)
+    return output_tags
 
 
 def process_image_and_save_tags(
     image_path,
     gen_threshold=0.55,
-    char_threshold=0.80,
+    char_threshold=0.7,
 ):
     try:
         predicted_tags_dict = get_tags_for_image(

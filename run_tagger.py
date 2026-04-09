@@ -36,17 +36,17 @@ def run_tagger(path: str):
     for source in iterdir:
         dest: Path = source
 
-        shuffix = ['png', 'webp', 'jpg']
+        shuffix = ['png', 'webp', 'jpg', 'jpeg']
 
         files = []
         for s in shuffix:
             files.extend(Path(dest).glob(f"*.{s}"))
 
         if use_active_token:
-            active_tokens = input(f'Active Token:({source.name})')
+            active_tokens = input(f'Active Token:({source.name.lower()})')
             if not active_tokens:
                 active_tokens = source.name
-            active_tokens = active_tokens.split(',')
+            active_tokens = [a.lower() for a in active_tokens.split(',')]
         else:
             active_tokens = []
 

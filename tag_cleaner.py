@@ -179,8 +179,10 @@ COMMON_TAGS = {
     'large breast',
 }
 
+REMOVED_TAGS_PATH = Path(__file__).resolve().parent / 'danbooru_tags_json' / 'removed_tags.json'
+
 try:
-    with open('removed_tags.json', 'r') as f:
+    with REMOVED_TAGS_PATH.open('r', encoding='utf-8') as f:
         removed_tags_set = json.load(f)
 except (FileNotFoundError, json.decoder.JSONDecodeError):
     removed_tags_set = set()
@@ -291,6 +293,7 @@ class TagCleaner(object):
 
         def is_delete_tags(tag):
             """是否是自动删除的 tags"""
+            # return False # 不自动删除 tags
             return (is_outfit_tags(tag) or is_blacked_tags(tag))
 
         # for tag, count in most_common:
@@ -320,7 +323,7 @@ class TagCleaner(object):
         for tag in user_selected_delete_tags:
             removed_tags_set.add(tag)
         
-        with open('removed_tags.json', 'w') as f:
+        with REMOVED_TAGS_PATH.open('w', encoding='utf-8') as f:
             json.dump(list(removed_tags_set), f)
 
         folder = list(self.tags_info.keys())[0].parent.name.replace('_waifuc', '')

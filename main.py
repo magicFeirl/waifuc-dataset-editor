@@ -1,6 +1,8 @@
-# @title Waifuc
+# 人物 waifuc
+
 from pathlib import Path
 import sys
+import shutil
 
 from waifuc.action import (
     ModeConvertAction,
@@ -9,13 +11,17 @@ from waifuc.action import (
     FilterSimilarAction,
     FileOrderAction,
     FileExtAction,
+    MinAreaFilterAction,
+    FirstNSelectAction,
+    PersonSplitAction,
+    NoMonochromeAction
 )
 
 from waifuc.export import TextualInversionExporter
 from waifuc.source import LocalSource
 
 from cl_tagger import process_image_and_save_tags
-from tag_cleanr import TagCleaner
+from tag_cleaner import TagCleaner
 
 
 def banner(message):
@@ -28,12 +34,16 @@ def banner(message):
 def run_local_source(source: str, dest: str):
     (LocalSource(source)).attach(
         ModeConvertAction("RGB", "white"),
-        CCIPAction(min_val_count=15),
+        NoMonochromeAction(),
+        # PersonSplitAction(),
         ThreeStageSplitAction(),
-        FilterSimilarAction(threshold=0.4),
+        MinAreaFilterAction(512),
+        FilterSimilarAction(),
+        CCIPAction(min_val_count=15),
         FileOrderAction(),
         # TaggingAction(),
-        FileExtAction(ext=".png"),
+        FileExtAction(ext=".jpg"),
+        FirstNSelectAction(180),
     ).export(TextualInversionExporter(dest))
 
     return dest.absolute()
@@ -53,14 +63,16 @@ def waifuc(path: str):
             continue
 
         dest: Path = Path("./output/") / (source.name.split('-')[0] + "_waifuc")
-        if not dest.is_dir():
-            print("Processing:", source)
-            run_local_source(source, dest)
-        else:
-            print(f'{dest} existed, skipping waifuc')
+        if dest.is_dir():
+            print('Delete existed dir:', dest)
+            shutil.rmtree(dest)
+        print("Processing:", source)
+        run_local_source(source, dest)
+        # else:
+        #     print(f'{dest} existed, skipping waifuc')
 
         tag_cleaner = TagCleaner()
-        for image_path in Path(dest).glob("*.png"):
+        for image_path in Path(dest).glob("*.jpg"):
             filename = Path(image_path).with_suffix("")
 
             tags = process_image_and_save_tags(
@@ -77,7 +89,7 @@ def waifuc(path: str):
             file.with_suffix(".txt").write_text(', '.join(tags))
 
         print(f'Output Dir({tag_cleaner.file_count} images):')
-        print(dest.name, f'Images Count: {total_images}. Suggest Steps: {total_images * 10}')
+        print(dest.name, f'Images Count: {total_images}. Suggest Steps: {total_images * 10 + 200}')
         print(dest.absolute())
         
 if __name__ == '__main__':

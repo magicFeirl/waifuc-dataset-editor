@@ -1,21 +1,25 @@
 # @title Waifuc
 from pathlib import Path
 import sys
+import shutil
 
 from waifuc.action import (
     ModeConvertAction,
-    ThreeStageSplitAction,
-    CCIPAction,
-    FilterSimilarAction,
+    FirstNSelectAction,
     FileOrderAction,
+    FilterSimilarAction,
     FileExtAction,
+    HeadCountAction,
+    NoMonochromeAction,
+    MinAreaFilterAction,
+    PersonRatioAction,
+    ClassFilterAction
 )
 
-from waifuc.export import TextualInversionExporter
+from waifuc.export import SaveExporter
 from waifuc.source import LocalSource
 
 from cl_tagger import process_image_and_save_tags
-from tag_cleanr import TagCleaner
 
 
 def banner(message):
@@ -26,12 +30,18 @@ def banner(message):
 
 
 def run_local_source(source: str, dest: str):
-    (LocalSource(source)).attach(
+    (LocalSource(str(source), recursive=False)).attach(
+        MinAreaFilterAction(768),
+        # RandomChoiceAction(p=0.3),
         ModeConvertAction("RGB", "white"),
+        NoMonochromeAction(),
+        ClassFilterAction(["illustration", "bangumi"]),
+        HeadCountAction(min_count=1),
+        FilterSimilarAction(threshold=0.45),  # threshold <= 0.45 可以被认为是相像的
         FileOrderAction(),
-        # TaggingAction(),
         FileExtAction(ext=".jpg"),
-    ).export(TextualInversionExporter(dest))
+        FirstNSelectAction(200),
+    ).export(SaveExporter(dest, no_meta=True)) # site-packages\waifuc\model\item.py L93 删除了 save_params 参数
 
     return dest.absolute()
 
@@ -48,18 +58,27 @@ def waifuc(path: str):
         if not source.is_dir():
             continue
 
-        dest: Path = Path("./output/") / (source.name.split('-')[0] + "_waifuc")
-        if not dest.is_dir():
-            print("Processing:", source)
-            run_local_source(source, dest)
-        else:
-            print(f'{dest} existed, skipping waifuc')
+        dest: Path = Path("./output/") / source.name
 
-        active_tokens = input(f'Active Tokens({source.name}):')
+        if dest.is_dir():
+            print('Rm:', dest)
+            shutil.rmtree(dest, ignore_errors=True)
+        # if dest.is_dir() or len(list(dest.glob("*.*"))):
+        #     old_dest_new_name = dest.with_name(dest.name + "_1")
+        #     banner(f"{dest} existed, rename to {old_dest_new_name}")
+        #     os.rename(dest, old_dest_new_name)
+
+        print("Processing:", source)
+        run_local_source(source, dest)
+
+        active_tokens = input(f"Active Tokens({source.name}):")
+
         if not active_tokens:
             active_tokens = source.name
 
-        shuffix = ['png', 'webp', 'jpg']
+        active_tokens = active_tokens.lower()
+
+        shuffix = ["png", "webp", "jpg"]
         files = []
         for s in shuffix:
             files.extend(Path(dest).glob(f"*.{s}"))
@@ -71,21 +90,26 @@ def waifuc(path: str):
                 image_path=str(image_path),
                 gen_threshold=0.45,
             )
+            
+            tags = [tag.lower() for tag in tags if tag not in active_tokens]
+            tags.insert(0, active_tokens)
 
-            tags = [active_tokens, tags]
-            filename.write_text(', '.join(tags))
+            filename.write_text(", ".join(tags))
 
-        print('Output Dir:')
+        print(f"Output Dir ({len(files)} files):")
         print(dest.absolute())
-        
-if __name__ == '__main__':
-    target = r''
+
+
+if __name__ == "__main__":
+    target = r""
 
     if len(sys.argv) == 2:
         target = sys.argv[1]
+    else:
+        target = input("Input Dir:")
 
     while target:
         waifuc(target)
         print()
-        target = input('Input Dir:')
+        target = input("Input Dir:")
         print()

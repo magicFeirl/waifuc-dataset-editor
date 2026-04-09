@@ -1,0 +1,27 @@
+[
+  {
+    "id": 1,
+    "en": "other",
+    "zh": "其他"
+  },
+  {
+    "id": 2,
+    "en": "scenery",
+    "zh": "场景"
+  },
+  {
+    "id": 3,
+    "en": "appearance",
+    "zh": "外观"
+  },
+  {
+    "id": 4,
+    "en": "pose",
+    "zh": "姿态"
+  },
+  {
+    "id": 5,
+    "en": "clothing",
+    "zh": "服饰"
+  }
+]
