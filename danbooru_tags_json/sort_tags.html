@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tag Classifier</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0f0f13;
+    color: #e0e0e0;
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  h1 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #aaa;
+    margin-bottom: 16px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 120px;
+    background: #1a1a22;
+    border: 1px solid #333;
+    border-radius: 8px;
+    color: #e0e0e0;
+    font-size: 0.9rem;
+    font-family: 'Consolas', 'Courier New', monospace;
+    padding: 12px;
+    resize: vertical;
+    outline: none;
+    line-height: 1.6;
+    transition: border-color 0.2s;
+  }
+  textarea:focus { border-color: #555; }
+  textarea::placeholder { color: #444; }
+
+  #status {
+    font-size: 0.78rem;
+    color: #555;
+    margin-top: 6px;
+    min-height: 1.2em;
+  }
+
+  #output {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .group {
+    background: #1a1a22;
+    border: 1px solid #2a2a35;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .group-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: #1e1e28;
+    border-bottom: 1px solid #2a2a35;
+  }
+
+  .group-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .group-name {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .group-count {
+    font-size: 0.72rem;
+    color: #555;
+    margin-left: auto;
+  }
+
+  .group-tags {
+    padding: 10px 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .tag {
+    background: #252530;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 0.82rem;
+    font-family: 'Consolas', 'Courier New', monospace;
+    color: #ccc;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    user-select: none;
+  }
+  .tag:hover { background: #2e2e3e; border-color: #555; }
+
+  .copy-line {
+    padding: 6px 14px 10px;
+    border-top: 1px solid #222;
+  }
+
+  .copy-btn {
+    background: none;
+    border: 1px solid #333;
+    border-radius: 4px;
+    color: #555;
+    font-size: 0.72rem;
+    padding: 2px 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .copy-btn:hover { border-color: #888; color: #aaa; }
+  .copy-btn.copied { border-color: #4caf7d; color: #4caf7d; }
+
+  /* Color coding per class */
+  .dot-pose     { background: #e87c5a; }
+  .dot-appearance { background: #6b9de8; }
+  .dot-clothing { background: #b07de8; }
+  .dot-scenery  { background: #5aae82; }
+  .dot-other    { background: #e8c35a; }
+  .dot-unknown  { background: #666; }
+
+  .name-pose     { color: #e87c5a; }
+  .name-appearance { color: #6b9de8; }
+  .name-clothing { color: #b07de8; }
+  .name-scenery  { color: #5aae82; }
+  .name-other    { color: #e8c35a; }
+  .name-unknown  { color: #888; }
+
+  #loading {
+    color: #444;
+    font-size: 0.85rem;
+    margin-top: 12px;
+  }
+
+  /* Quick copy bar */
+  #quick-copy {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .qc-btn {
+    background: #1a1a22;
+    border: 1px solid #2e2e3e;
+    border-radius: 6px;
+    color: #888;
+    font-size: 0.78rem;
+    padding: 5px 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .qc-btn:hover:not(:disabled) { border-color: #666; color: #ccc; background: #22222e; }
+  .qc-btn:disabled { opacity: 0.3; cursor: default; }
+  .qc-btn.copied { border-color: #4caf7d; color: #4caf7d; }
+
+  .qc-dots {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+  }
+  .qc-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+  }
+
+  .qc-count {
+    margin-left: 4px;
+    font-size: 0.72rem;
+    opacity: 0.45;
+  }
+
+  .qc-sep {
+    width: 1px;
+    background: #2e2e3e;
+    align-self: stretch;
+    margin: 0 2px;
+  }
+
+  #qc-sorted {
+    border-color: #3a3a50;
+    color: #aaa;
+  }
+  #qc-sorted:hover:not(:disabled) { border-color: #888; color: #e0e0e0; background: #22222e; }
+</style>
+</head>
+<body>
+
+<h1>Tag Classifier</h1>
+
+<textarea id="input" placeholder="输入 tags，用逗号分隔，例如: 1girl, blue_eyes, smile, white background, school uniform" spellcheck="false"></textarea>
+<div id="status"></div>
+<div id="quick-copy">
+  <button class="qc-btn" id="qc-sorted" disabled>
+    <span class="qc-label">已排序</span>
+    <span class="qc-count"></span>
+  </button>
+  <span class="qc-sep"></span>
+  <button class="qc-btn" id="qc-pose-app-cloth" disabled>
+    <span class="qc-dots">
+      <span class="qc-dot dot-pose"></span>
+      <span class="qc-dot dot-appearance"></span>
+      <span class="qc-dot dot-clothing"></span>
+    </span>
+    <span class="qc-label">姿态 + 外观 + 服饰</span>
+    <span class="qc-count"></span>
+  </button>
+  <button class="qc-btn" id="qc-app-cloth" disabled>
+    <span class="qc-dots">
+      <span class="qc-dot dot-appearance"></span>
+      <span class="qc-dot dot-clothing"></span>
+    </span>
+    <span class="qc-label">外观 + 服饰</span>
+    <span class="qc-count"></span>
+  </button>
+  <button class="qc-btn" id="qc-pose-scenery" disabled>
+    <span class="qc-dots">
+      <span class="qc-dot dot-pose"></span>
+      <span class="qc-dot dot-scenery"></span>
+    </span>
+    <span class="qc-label">姿态 + 场景</span>
+    <span class="qc-count"></span>
+  </button>
+</div>
+<div id="loading">Loading tag database...</div>
+<div id="output"></div>
+
+<script>
+// ── Class definitions ──────────────────────────────────────────────────
+const CLASS_DEFS = [
+  { id: -1, en: "unknown",    zh: "未知" },
+  { id:  1, en: "other",      zh: "其他" },
+  { id:  2, en: "scenery",    zh: "场景" },
+  { id:  3, en: "appearance", zh: "外观" },
+  { id:  4, en: "pose",       zh: "姿态" },
+  { id:  5, en: "clothing",   zh: "服饰" },
+];
+
+const CLASS_ORDER_NAMES = ["pose", "appearance", "clothing", "scenery", "other", "unknown"];
+
+function buildClassOrder() {
+  const enToDef = {};
+  CLASS_DEFS.forEach(c => enToDef[c.en] = c);
+  const ordered = CLASS_ORDER_NAMES.filter(n => enToDef[n]).map(n => enToDef[n]);
+  const orderedSet = new Set(CLASS_ORDER_NAMES);
+  const remaining = CLASS_DEFS.filter(c => !orderedSet.has(c.en));
+  return [...ordered, ...remaining];
+}
+
+const ORDERED_CLASSES = buildClassOrder();
+// Map class_id -> display index for sorting
+const CLASS_ORDER_INDEX = {};
+ORDERED_CLASSES.forEach((c, i) => CLASS_ORDER_INDEX[c.id] = i);
+
+// ── Load tag database ──────────────────────────────────────────────────
+let TAG_TO_CLASS = null;
+
+fetch('danbooru_tags_exclude_other.json')
+  .then(r => r.json())
+  .then(data => {
+    TAG_TO_CLASS = data;
+    document.getElementById('loading').textContent = '';
+    document.getElementById('status').textContent = `数据库已加载：${Object.keys(data).length.toLocaleString()} 条 tags`;
+    // process any pre-typed input
+    processInput();
+  })
+  .catch(() => {
+    document.getElementById('loading').textContent =
+      '无法加载 danbooru_tags_exclude_other.json（需要本地 HTTP 服务器或将数据内嵌）';
+  });
+
+// ── Input handling ─────────────────────────────────────────────────────
+const inputEl  = document.getElementById('input');
+const statusEl = document.getElementById('status');
+const outputEl = document.getElementById('output');
+
+// EN name -> class id lookup
+const EN_TO_ID = {};
+CLASS_DEFS.forEach(c => EN_TO_ID[c.en] = c.id);
+
+// Current grouped tags (class_id -> [display tag])
+let currentGroups = {};
+
+// Quick copy button definitions: [button_id, [en class names]]
+const QUICK_COPY_DEFS = [
+  ['qc-pose-app-cloth',  ['pose', 'appearance', 'clothing']],
+  ['qc-app-cloth',       ['appearance', 'clothing']],
+  ['qc-pose-scenery',    ['pose', 'scenery']],
+];
+
+function getComboTags(enNames) {
+  return enNames.flatMap(name => currentGroups[EN_TO_ID[name]] || []);
+}
+
+// Returns one line per non-empty group, preserving category boundaries
+function getComboLines(enNames) {
+  return enNames
+    .map(name => currentGroups[EN_TO_ID[name]] || [])
+    .filter(arr => arr.length > 0)
+    .map(arr => arr.join(', '))
+    .join('\n');
+}
+
+// Sort order for "已排序" button: appearance, clothing, pose, scenery, other
+const SORTED_COPY_ORDER = [3, 5, 4, 2, 1]; // class ids
+
+function getSortedCopyText() {
+  const tags = parseInputTags(inputEl.value);
+  if (!tags.length) return '';
+
+  const classified = tags.map(t => {
+    const isAngle = /^<[^>]+>$/.test(t);
+    const key = isAngle ? t : t.replace(/ /g, '_');
+    return {
+      display: isAngle ? t : key.replace(/_/g, ' '),
+      classId: isAngle ? -1 : (TAG_TO_CLASS.hasOwnProperty(key) ? TAG_TO_CLASS[key] : -1),
+    };
+  });
+
+  // If any unknown appears before the first known tag → unknowns go to top, else bottom
+  const firstKnownIdx = classified.findIndex(t => t.classId !== -1);
+  const unknownsOnTop = firstKnownIdx > 0 && classified.slice(0, firstKnownIdx).some(t => t.classId === -1);
+
+  const groups = {};
+  const unknownTags = [];
+  classified.forEach(({ display, classId }) => {
+    if (classId === -1) {
+      unknownTags.push(display);
+    } else {
+      if (!groups[classId]) groups[classId] = [];
+      groups[classId].push(display);
+    }
+  });
+
+  Object.values(groups).forEach(arr => arr.sort());
+
+  const knownLines = SORTED_COPY_ORDER
+    .filter(id => groups[id] && groups[id].length)
+    .map(id => groups[id].join(', '));
+
+  if (!unknownTags.length) return knownLines.join('\n');
+  if (!knownLines.length) return buildUnknownSection(unknownTags);
+
+  const unknownSection = buildUnknownSection(unknownTags);
+  return unknownsOnTop
+    ? [unknownSection, ...knownLines].join('\n')
+    : [...knownLines, unknownSection].join('\n');
+}
+
+// <...> tokens each on their own line; plain unknowns grouped with ', '
+function buildUnknownSection(tags) {
+  const lines = [];
+  let buf = [];
+  for (const tag of tags) {
+    if (/^<[^>]+>$/.test(tag)) {
+      if (buf.length) { lines.push(buf.join(', ')); buf = []; }
+      lines.push(tag);
+    } else {
+      buf.push(tag);
+    }
+  }
+  if (buf.length) lines.push(buf.join(', '));
+  return lines.join('\n');
+}
+
+function updateQuickCopyButtons() {
+  // "已排序" button
+  const sortedText = TAG_TO_CLASS ? getSortedCopyText() : '';
+  const sortedBtn = document.getElementById('qc-sorted');
+  const sortedCount = sortedText
+    ? sortedText.split(',').filter(s => s.trim()).length
+    : 0;
+  sortedBtn.disabled = sortedCount === 0;
+  sortedBtn.querySelector('.qc-count').textContent = sortedCount || '';
+
+  // Combo buttons
+  QUICK_COPY_DEFS.forEach(([btnId, enNames]) => {
+    const btn = document.getElementById(btnId);
+    const tags = getComboTags(enNames);
+    btn.disabled = tags.length === 0;
+    btn.querySelector('.qc-count').textContent = tags.length ? tags.length : '';
+  });
+}
+
+let debounceTimer;
+inputEl.addEventListener('input', () => {
+  // Strip leading horizontal whitespace from each line, preserving cursor
+  const text = inputEl.value;
+  let removedBeforeCursor = 0;
+  const cursor = inputEl.selectionStart;
+  const newText = text.replace(/^[ \t]+/gm, (match, offset) => {
+    if (offset + match.length <= cursor) {
+      removedBeforeCursor += match.length;
+    } else if (offset < cursor) {
+      removedBeforeCursor += cursor - offset;
+    }
+    return '';
+  });
+  if (newText !== text) {
+    inputEl.value = newText;
+    const newCursor = cursor - removedBeforeCursor;
+    inputEl.setSelectionRange(newCursor, newCursor);
+  }
+
+  // Strip any leading \s+ from the very start of the content
+  const trimStart = inputEl.value.match(/^\s+/);
+  if (trimStart) {
+    const len = trimStart[0].length;
+    const cur = inputEl.selectionStart;
+    inputEl.value = inputEl.value.slice(len);
+    inputEl.setSelectionRange(Math.max(0, cur - len), Math.max(0, cur - len));
+  }
+
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(processInput, 120);
+});
+inputEl.addEventListener('focus', () => inputEl.select());
+
+function normalizeSegment(text) {
+  return text
+    .replace(/[ \t]*\n[ \t]*/g, '\n')
+    .replace(/,\n/g, ',')
+    .replace(/\n/g, ',');
+}
+
+function normalizeInput(text) {
+  // Split around <...> tokens; preserve any \n immediately before/after each token
+  const parts = [];
+  const re = /<[^>]+>/g;
+  let last = 0, m, prevWasAngle = false;
+
+  while ((m = re.exec(text)) !== null) {
+    let seg = text.slice(last, m.index);
+
+    // Leading \n of this segment: preserve if previous part was an angle token
+    let leadNL = '';
+    if (prevWasAngle) {
+      const nl = seg.match(/^[ \t]*\n/);
+      if (nl) { leadNL = '\n'; seg = seg.slice(nl[0].length); }
+    }
+
+    // Trailing \n of this segment: preserve because next part is an angle token
+    let trailNL = '';
+    const tnl = seg.match(/[ \t]*\n[ \t]*$/);
+    if (tnl) { trailNL = '\n'; seg = seg.slice(0, tnl.index); }
+
+    parts.push(leadNL + normalizeSegment(seg) + trailNL);
+    parts.push(m[0]); // angle token: unchanged
+    last = m.index + m[0].length;
+    prevWasAngle = true;
+  }
+
+  let tail = text.slice(last);
+  let leadNL = '';
+  if (prevWasAngle) {
+    const nl = tail.match(/^[ \t]*\n/);
+    if (nl) { leadNL = '\n'; tail = tail.slice(nl[0].length); }
+  }
+  parts.push(leadNL + normalizeSegment(tail));
+  return parts.join('');
+}
+
+function parseInputTags(text) {
+  // Split on ',' or '\n' but NOT inside <...> tokens
+  const normalized = normalizeInput(text);
+  const tokens = [];
+  let cur = '', inAngle = false;
+  for (const ch of normalized) {
+    if      (ch === '<')                              { inAngle = true;  cur += ch; }
+    else if (ch === '>')                              { inAngle = false; cur += ch; }
+    else if ((ch === ',' || ch === '\n') && !inAngle) { const t = cur.trim(); if (t) tokens.push(t); cur = ''; }
+    else                                              { cur += ch; }
+  }
+  const t = cur.trim();
+  if (t) tokens.push(t);
+  return tokens;
+}
+
+function processInput() {
+  if (!TAG_TO_CLASS) return;
+
+  const raw = inputEl.value;
+  const tags = parseInputTags(raw);
+
+  if (!tags.length) {
+    outputEl.innerHTML = '';
+    currentGroups = {};
+    updateQuickCopyButtons();
+    statusEl.textContent = TAG_TO_CLASS
+      ? `数据库已加载：${Object.keys(TAG_TO_CLASS).length.toLocaleString()} 条 tags`
+      : '';
+    return;
+  }
+
+  // Normalize: spaces → underscores for lookup; <...> tokens are left untouched
+  const ANGLE_RE = /^<[^>]+>$/;
+
+  // Group by class
+  const groups = {}; // class_id -> [display_tag]
+  tags.forEach(tag => {
+    const isAngle = ANGLE_RE.test(tag);
+    const key     = isAngle ? tag : tag.replace(/ /g, '_');
+    const classId = isAngle ? -1 : (TAG_TO_CLASS.hasOwnProperty(key) ? TAG_TO_CLASS[key] : -1);
+    if (!groups[classId]) groups[classId] = [];
+    groups[classId].push(isAngle ? tag : key.replace(/_/g, ' '));
+  });
+
+  // Sort each group alphabetically, unknown group (-1) keeps original input order
+  Object.entries(groups).forEach(([id, arr]) => { if (Number(id) !== -1) arr.sort(); });
+
+  // Expose to quick-copy
+  currentGroups = groups;
+  updateQuickCopyButtons();
+
+  // Count unknowns
+  const unknownCount = (groups[-1] || []).length;
+  statusEl.textContent =
+    `${tags.length} tags 已分类` +
+    (unknownCount ? `，其中 ${unknownCount} 个未识别` : '');
+
+  // Render
+  outputEl.innerHTML = '';
+  ORDERED_CLASSES.forEach(cls => {
+    const arr = groups[cls.id];
+    if (!arr || !arr.length) return;
+
+    const en = cls.en;
+    const zh = cls.zh;
+
+    const group = document.createElement('div');
+    group.className = 'group';
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'group-header';
+    header.innerHTML = `
+      <span class="group-dot dot-${en}"></span>
+      <span class="group-name name-${en}">${zh} <small style="font-weight:400;text-transform:none;letter-spacing:0;opacity:0.6">${en}</small></span>
+      <span class="group-count">${arr.length}</span>
+    `;
+    group.appendChild(header);
+
+    // Tags
+    const tagsDiv = document.createElement('div');
+    tagsDiv.className = 'group-tags';
+    arr.forEach(tag => {
+      const span = document.createElement('span');
+      span.className = 'tag';
+      span.textContent = tag;
+      span.title = 'Click to copy';
+      span.addEventListener('click', () => copyText(tag, span));
+      tagsDiv.appendChild(span);
+    });
+    group.appendChild(tagsDiv);
+
+    // Copy-all line
+    const copyLine = document.createElement('div');
+    copyLine.className = 'copy-line';
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'copy-btn';
+    copyBtn.textContent = 'Copy all';
+    copyBtn.addEventListener('click', () => {
+      const text = arr.join(', ');
+      navigator.clipboard.writeText(addTrailingCommas(text)).then(() => {
+        copyBtn.textContent = 'Copied!';
+        copyBtn.classList.add('copied');
+        setTimeout(() => { copyBtn.textContent = 'Copy all'; copyBtn.classList.remove('copied'); }, 1500);
+      });
+    });
+    copyLine.appendChild(copyBtn);
+    group.appendChild(copyLine);
+
+    outputEl.appendChild(group);
+  });
+}
+
+// Add trailing comma to each non-empty line if not already present
+function addTrailingCommas(text) {
+  return text.split('\n').map(line => {
+    const t = line.trimEnd();
+    return (t && !t.endsWith(',')) ? t + ',' : t;
+  }).join('\n');
+}
+
+function copyText(text, el) {
+  navigator.clipboard.writeText(addTrailingCommas(text)).then(() => {
+    const orig = el.textContent;
+    el.textContent = '✓';
+    setTimeout(() => { el.textContent = orig; }, 800);
+  });
+}
+
+// ── Quick copy button click handlers ───────────────────────────────────
+document.getElementById('qc-sorted').addEventListener('click', function() {
+  const text = getSortedCopyText();
+  if (!text) return;
+  navigator.clipboard.writeText(addTrailingCommas(text)).then(() => {
+    this.classList.add('copied');
+    const label = this.querySelector('.qc-label');
+    const orig = label.textContent;
+    label.textContent = 'Copied!';
+    setTimeout(() => { this.classList.remove('copied'); label.textContent = orig; }, 1500);
+  });
+});
+
+QUICK_COPY_DEFS.forEach(([btnId, enNames]) => {
+  document.getElementById(btnId).addEventListener('click', function() {
+    const text = getComboLines(enNames);
+    if (!text) return;
+    navigator.clipboard.writeText(addTrailingCommas(text)).then(() => {
+      this.classList.add('copied');
+      const label = this.querySelector('.qc-label');
+      const orig = label.textContent;
+      label.textContent = 'Copied!';
+      setTimeout(() => {
+        this.classList.remove('copied');
+        label.textContent = orig;
+      }, 1500);
+    });
+  });
+});
+</script>
+</body>
+</html>

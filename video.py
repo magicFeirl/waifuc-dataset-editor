@@ -29,7 +29,7 @@ def main(source: str, dest: str):
 
     (s).attach(
         NoMonochromeAction(),
-        ClassFilterAction(["illustration", "bangumi"]),
+        # ClassFilterAction(["illustration", "bangumi"]),
         # HeadCountAction(min_count=1),
         FaceCountAction(min_count=1, max_count=3),
         PersonRatioAction(ratio=0.6), # 提取番剧时打开

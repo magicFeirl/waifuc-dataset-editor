@@ -14,7 +14,7 @@ from waifuc.export import TextualInversionExporter
 from waifuc.source import LocalSource
 
 
-from cl_tagger import process_image_and_save_tags
+from tagger import process_image_and_save_tags, get_active_token
 
 
 def banner(message):
@@ -36,29 +36,12 @@ def run_tagger(path: str):
     for source in iterdir:
         dest: Path = source
 
-        shuffix = ['png', 'webp', 'jpg', 'jpeg']
+        active_tokens = [get_active_token(source.name)] if use_active_token else []
 
-        files = []
-        for s in shuffix:
-            files.extend(Path(dest).glob(f"*.{s}"))
-
-        if use_active_token:
-            active_tokens = input(f'Active Token:({source.name.lower()})')
-            if not active_tokens:
-                active_tokens = source.name
-            active_tokens = [a.lower() for a in active_tokens.split(',')]
-        else:
-            active_tokens = []
-
-        for image_path in files:
-            filename = Path(image_path).with_suffix(".txt")
-
-            tags = process_image_and_save_tags(
-                image_path=str(image_path),
-                gen_threshold=0.45,
-            )
-
-            tags = [*active_tokens, tags]
+        tagged = process_image_and_save_tags(image_dir=dest, gen_threshold=0.35)
+        for image_path, tags in tagged.items():
+            filename = image_path.with_suffix(".txt")
+            tags = [*active_tokens, *tags]
             filename.write_text(', '.join(tags))
 
         print('Output Dir:')

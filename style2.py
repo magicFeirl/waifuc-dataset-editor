@@ -22,7 +22,7 @@ from waifuc.export import TextualInversionExporter
 from waifuc.source import LocalSource
 
 # --- Tagger 导入 ---
-from cl_tagger import process_image_and_save_tags
+from tagger import process_image_and_save_tags, get_active_token
 
 
 def banner(message):
@@ -244,17 +244,12 @@ def extract_wildcards_from_album(album_path: Path):
     print(f"✅ 找到 {len(images)} 张图片，开始剥离人物特征...")
     wildcards = []
 
-    for idx, img_path in enumerate(images):
-        print(f"  [{idx+1}/{len(images)}] 处理中: {img_path.name}")
-        
-        raw_tags_str = process_image_and_save_tags(
-            image_path=str(img_path),
-            gen_threshold=0.45,
-        )
-        
-        tags = [t.strip() for t in raw_tags_str.split(",") if t.strip()]
+    tagged = process_image_and_save_tags(image_dir=album_path, gen_threshold=0.45)
+    # 按自然排序输出
+    sorted_items = sorted(tagged.items(), key=lambda x: natural_sort_key(x[0]))
+    for idx, (img_path, tags) in enumerate(sorted_items):
+        print(f"  [{idx+1}/{len(sorted_items)}] 处理中: {img_path.name}")
         cleaned_tags = [t for t in tags if not is_character_feature(t)]
-        
         wildcard_line = ", ".join(cleaned_tags)
         if wildcard_line:
             wildcards.append(wildcard_line)
@@ -341,26 +336,16 @@ def waifuc(path: Path, output_name_override: str = None):
         else:
             print(f"{dest} existed, skipping waifuc filtering")
 
-        active_tokens = input(f"Active Tokens for '{base_name}': ")
-        if not active_tokens:
-            active_tokens = base_name
+        active_tokens = get_active_token(base_name)
 
-        shuffix = ["png", "webp", "jpg"]
-        files = []
-        for s in shuffix:
-            files.extend(Path(dest).glob(f"*.{s}"))
-            
-        # 🔥 在打标时也应用自然排序
-        files.sort(key=lambda x: natural_sort_key(Path(x)))
+        tagged = process_image_and_save_tags(image_dir=dest, gen_threshold=0.45)
+        # 按自然排序写入
+        sorted_items = sorted(tagged.items(), key=lambda x: natural_sort_key(x[0]))
 
-        print(f"Tagging {len(files)} images...")
-        for image_path in files:
-            filename = Path(image_path).with_suffix(".txt")
-            tags = process_image_and_save_tags(
-                image_path=str(image_path),
-                gen_threshold=0.45,
-            )
-            tags = [active_tokens, tags]
+        print(f"Tagging {len(sorted_items)} images...")
+        for image_path, tags in sorted_items:
+            filename = image_path.with_suffix(".txt")
+            tags = [active_tokens, *tags]
             filename.write_text(", ".join(tags))
 
         print("🎉 Output Dir:")

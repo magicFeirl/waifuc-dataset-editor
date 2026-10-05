@@ -153,101 +153,284 @@ STYLE_ARTIST_TAGS = {
 }
 
 COMMON_TAGS = {
-    'black hat',
-    'hair between eyes',
-    'red bow',
-    'long sleeves',
-    'black jacket',
-    'bowtie',
-    'red bowtie',
-    'white shirt',
-    'black skirt',
-    'pleated skirt',
-    'open clothes',
-    'striped bowtie',
-    'collared shirt',
-    'striped bow',
-    'breasts',
-    'open jacket',
-    'single braid',
-    'black socks',
-    'earrings',
-    'very long hair',
-    'jewelry',
-    'twin braids',
-    'black shoes,',
-    'large breast',
+    "black hat",
+    "hair between eyes",
+    "red bow",
+    "long sleeves",
+    "black jacket",
+    "bowtie",
+    "red bowtie",
+    "white shirt",
+    "black skirt",
+    "pleated skirt",
+    "open clothes",
+    "striped bowtie",
+    "collared shirt",
+    "striped bow",
+    "breasts",
+    "open jacket",
+    "single braid",
+    "black socks",
+    "earrings",
+    "very long hair",
+    "jewelry",
+    "twin braids",
+    "black shoes,",
+    "large breast",
 }
 
-REMOVED_TAGS_PATH = Path(__file__).resolve().parent / 'danbooru_tags_json' / 'removed_tags.json'
+REMOVED_TAGS_PATH = (
+    Path(__file__).resolve().parent / "danbooru_tags_json" / "removed_tags.json"
+)
 
 try:
-    with REMOVED_TAGS_PATH.open('r', encoding='utf-8') as f:
+    with REMOVED_TAGS_PATH.open("r", encoding="utf-8") as f:
         removed_tags_set = json.load(f)
 except (FileNotFoundError, json.decoder.JSONDecodeError):
     removed_tags_set = set()
 
 REMOVE_TAGS = {
-    'pink hair', 'long hair', 'choker', 'white choker', 'collarbone', 'breasts', 'yellow eyes', 'white bikini', 'frills', 
-    'cleavage', 'large breasts', 'swimsuit', 'bikini', 'navel', 'stomach', 'wings', 'frilled bikini', 'bare shoulders', 
-    'underwear', 'bra', 'white bra', 'animal ears', 'fox ears', 'fox girl', 'brown hair', 'animal ear fluff', 'short hair', 
-    'official alternate costume', 'visor cap', 'striped bikini', 'medium breasts', 'striped clothes', 'scarf', 'tail', 
-    'fox tail', 'shorts', 'highleg', 'highleg bikini', 'bikini under clothes', 'denim shorts', 'denim', 'short shorts', 
-    'flower', 'blue shorts', 'yellow nails', 'shirt', 'white shirt', 'long sleeves', 'two side up', 'hair ornament', 
-    'dress', 'ribbon', 'school uniform', 'grey hair', 'neck ribbon', 'very long hair', 'hair between eyes', 'sleeveless dress', 
-    'collared shirt', 'sleeveless', 'black choker', 'pantyhose', 'buttons', 'orange eyes', 'hair flower', 'black shoes', 
-    'rose', 'skirt', 'red rose', 'pinafore dress', 'red flower', 'multicolored hair', 'black hair', 'two-tone hair', 
-    'white hair', 'red eyes', 'horns', 'cardigan', 'black horns', 'demon horns', 'black dress', 'black nails', 
-    'open clothes', 'nail polish', 'off shoulder', 'black footwear', 'alternate costume', 'jewelry', 'small breasts', 
-    'necklace', 'jacket', 'open cardigan', 'earrings', 'cat ears', 'serafuku', 'sailor collar', 'cat tail', 'cat girl', 
-    'black sailor collar', 'pleated skirt', 'black eyes', 'extra ears', 'black skirt', 'double bun', 'hair bun', 
-    'pink eyes', 'bracelet', 'necktie', 'fake horns', 'red necktie', 'shoes', 'socks', 'thigh strap', 'white socks', 
-    'fingernails', 'twintails', 'hat', 'beret', 'yellow dress', 'puffy sleeves', 'blue eyes', 'frilled dress', 
-    'short sleeves', 'puffy short sleeves', 'white bow', 'frilled sleeves', 'hood', 'medium hair', 'hooded jacket', 
-    'open jacket', 'thighhighs', 'black thighhighs', 'hairclip', 'hood down', 'hairband', 'black hairband', 'gloves', 
-    'black gloves', 'virtual youtuber', 'bandaid', 'bandaid on face', 'neckerchief', 'bandaid on cheek', 'blue hair', 
-    'midriff peek', 'loose socks', 'bandaid on leg', 'bandages', 'streaked hair', 'bow', 'bandaid on arm', 'midriff', 
-    'ahoge', 'white thighhighs', 'hair bow', 'bandaged arm', 'colored inner hair', 'crop top', 'chinese clothes', 
-    'red dress', 'red hair', 'china dress', 'antenna hair', 'mole under eye', 'black socks', 'sneakers', 'kneehighs', 
-    'mole', 'pelvic curtain', 'wristwatch', 'blue necktie', 'hair ribbon', 'fingerless gloves', 'blazer', 'plaid skirt', 
-    'plaid clothes', 'blue ribbon', 'bike shorts', 'blue jacket', 'miniskirt', 'black jacket', 'knee pads', 'black shorts', 
-    'sidelocks', 'loafers', 'grey eyes', 'blue skirt', 'grey jacket', 'round eyewear', 'blunt bangs', 'black bow', 
-    'black bowtie', 'blush', 'grey skirt', 'mary janes', 'bob cut', 'shirt tucked in', 'red gemstone', 'brooch', 'black-framed eyewear',
+    "pink hair",
+    "long hair",
+    "choker",
+    "white choker",
+    "collarbone",
+    "breasts",
+    "yellow eyes",
+    "white bikini",
+    "frills",
+    "cleavage",
+    "large breasts",
+    "swimsuit",
+    "bikini",
+    "navel",
+    "stomach",
+    "wings",
+    "frilled bikini",
+    "bare shoulders",
+    "underwear",
+    "bra",
+    "white bra",
+    "animal ears",
+    "fox ears",
+    "fox girl",
+    "brown hair",
+    "animal ear fluff",
+    "short hair",
+    "official alternate costume",
+    "visor cap",
+    "striped bikini",
+    "medium breasts",
+    "striped clothes",
+    "scarf",
+    "tail",
+    "fox tail",
+    "shorts",
+    "highleg",
+    "highleg bikini",
+    "bikini under clothes",
+    "denim shorts",
+    "denim",
+    "short shorts",
+    "flower",
+    "blue shorts",
+    "yellow nails",
+    "shirt",
+    "white shirt",
+    "long sleeves",
+    "two side up",
+    "hair ornament",
+    "dress",
+    "ribbon",
+    "school uniform",
+    "grey hair",
+    "neck ribbon",
+    "very long hair",
+    "hair between eyes",
+    "sleeveless dress",
+    "collared shirt",
+    "sleeveless",
+    "black choker",
+    "pantyhose",
+    "buttons",
+    "orange eyes",
+    "hair flower",
+    "black shoes",
+    "rose",
+    "skirt",
+    "red rose",
+    "pinafore dress",
+    "red flower",
+    "multicolored hair",
+    "black hair",
+    "two-tone hair",
+    "white hair",
+    "red eyes",
+    "horns",
+    "cardigan",
+    "black horns",
+    "demon horns",
+    "black dress",
+    "black nails",
+    "open clothes",
+    "nail polish",
+    "off shoulder",
+    "black footwear",
+    "alternate costume",
+    "jewelry",
+    "small breasts",
+    "necklace",
+    "jacket",
+    "open cardigan",
+    "earrings",
+    "cat ears",
+    "serafuku",
+    "sailor collar",
+    "cat tail",
+    "cat girl",
+    "black sailor collar",
+    "pleated skirt",
+    "black eyes",
+    "extra ears",
+    "black skirt",
+    "double bun",
+    "hair bun",
+    "pink eyes",
+    "bracelet",
+    "necktie",
+    "fake horns",
+    "red necktie",
+    "shoes",
+    "socks",
+    "thigh strap",
+    "white socks",
+    "fingernails",
+    "twintails",
+    "hat",
+    "beret",
+    "yellow dress",
+    "puffy sleeves",
+    "blue eyes",
+    "frilled dress",
+    "short sleeves",
+    "puffy short sleeves",
+    "white bow",
+    "frilled sleeves",
+    "hood",
+    "medium hair",
+    "hooded jacket",
+    "open jacket",
+    "thighhighs",
+    "black thighhighs",
+    "hairclip",
+    "hood down",
+    "hairband",
+    "black hairband",
+    "gloves",
+    "black gloves",
+    "virtual youtuber",
+    "bandaid",
+    "bandaid on face",
+    "neckerchief",
+    "bandaid on cheek",
+    "blue hair",
+    "midriff peek",
+    "loose socks",
+    "bandaid on leg",
+    "bandages",
+    "streaked hair",
+    "bow",
+    "bandaid on arm",
+    "midriff",
+    "ahoge",
+    "white thighhighs",
+    "hair bow",
+    "bandaged arm",
+    "colored inner hair",
+    "crop top",
+    "chinese clothes",
+    "red dress",
+    "red hair",
+    "china dress",
+    "antenna hair",
+    "mole under eye",
+    "black socks",
+    "sneakers",
+    "kneehighs",
+    "mole",
+    "pelvic curtain",
+    "wristwatch",
+    "blue necktie",
+    "hair ribbon",
+    "fingerless gloves",
+    "blazer",
+    "plaid skirt",
+    "plaid clothes",
+    "blue ribbon",
+    "bike shorts",
+    "blue jacket",
+    "miniskirt",
+    "black jacket",
+    "knee pads",
+    "black shorts",
+    "sidelocks",
+    "loafers",
+    "grey eyes",
+    "blue skirt",
+    "grey jacket",
+    "round eyewear",
+    "blunt bangs",
+    "black bow",
+    "black bowtie",
+    "blush",
+    "grey skirt",
+    "mary janes",
+    "bob cut",
+    "shirt tucked in",
+    "red gemstone",
+    "brooch",
+    "black-framed eyewear",
 }.union(removed_tags_set)
 
 WHITELIST = {
-    '1girl',
-    'solo',
-    'simple background',
-    'white background',
-    'looking at viewer',
-    'full body',
-    'upper body',
-    'sitting',
-    'standing',
-    'lying',
-    'smile',
-    'open mouth',
-    'closed mouth',
-    'closed eyes',
-    'grin',
-    'teeth',
-    'upper teeth only',
-    'holding',
-    'crossed arms',
-    'arm up',
-    'blurry',
-    'blurry background',
-    'outdoors',
-    'blood',
-    'blood on face',
-    'blood on clothes',
-    'heterochromia'
+    "1girl",
+    "solo",
+    "simple background",
+    "white background",
+    "looking at viewer",
+    "full body",
+    "upper body",
+    "sitting",
+    "standing",
+    "lying",
+    "smile",
+    "open mouth",
+    "closed mouth",
+    "closed eyes",
+    "grin",
+    "teeth",
+    "upper teeth only",
+    "holding",
+    "crossed arms",
+    "arm up",
+    "blurry",
+    "blurry background",
+    "outdoors",
+    "blood",
+    "blood on face",
+    "blood on clothes",
+    "heterochromia",
+    "footwear",
+    "shoes",
+    "cat ears",
 }
 
 
 BLACKLIST = (
-    CHARACTER_FEATURES.union(QUALITY_TAGS).union(STYLE_ARTIST_TAGS).union(COMMON_TAGS).union(REMOVE_TAGS)
+    CHARACTER_FEATURES.union(QUALITY_TAGS)
+    .union(STYLE_ARTIST_TAGS)
+    .union(COMMON_TAGS)
+    .union(REMOVE_TAGS)
     # .union(CHARACTER_OUTFIT)
 )
 
@@ -257,7 +440,6 @@ class TagCleaner(object):
         self.counter = Counter()
         self.tags_info = {}
         self.file_count = 0
-
 
     def add_tags(self, filename: str, tags: Union[str, List[str]]) -> str:
         if isinstance(tags, str):
@@ -294,7 +476,15 @@ class TagCleaner(object):
         def is_delete_tags(tag):
             """是否是自动删除的 tags"""
             # return False # 不自动删除 tags
-            return (is_outfit_tags(tag) or is_blacked_tags(tag))
+            return (
+                is_outfit_tags(tag) or is_blacked_tags(tag)
+            ) and not is_whitelist_tag(tag)
+
+        def is_whitelist_tag(tag):
+            wl = list(WHITELIST)
+            # 判断 tag 是否在白名单中（不自动删除）
+            # 部分匹配白名单中的 tag 也算在白名单中
+            return tag in WHITELIST and any([wl_tag for wl_tag in wl if tag in wl])
 
         # for tag, count in most_common:
         #     if not is_delete_tags(tag):
@@ -302,6 +492,7 @@ class TagCleaner(object):
 
         print(f"Removing TOP {top_n} MOST COMMON && BLACKLIST tags:")
         removed_tags_set = set(REMOVE_TAGS)
+        removed_tags_set.difference_update(WHITELIST)
 
         for tag, count in most_common_top_n:
             if is_delete_tags(tag):
@@ -310,29 +501,53 @@ class TagCleaner(object):
 
         # 其它高频 tags
         common_percent = 0.3
-        other_common_tags = [(tag, count) for (tag, count) in most_common if count >= self.file_count * common_percent and not is_delete_tags(tag) and tag not in WHITELIST]
-        if other_common_tags:
-            print(f'Other common tags(>={common_percent * 100}%):')
-            print(', '.join([f'{tag} {count}/{self.file_count}' for tag, count in other_common_tags]))
-            print('-' * 20)
-            print(', '.join([item[0] for item in other_common_tags]))
-        else:
-            print(f'No not removed tags >={common_percent * 100}% found')
+        top_n_count = self.file_count * common_percent
+        other_common_tags = [
+            (tag, count)
+            for (tag, count) in most_common
+            if count >= top_n_count and not is_delete_tags(tag)
+        ]
 
-        user_selected_delete_tags = [tag.strip() for tag in input('Select tags to delete: ').split(',')]
+        if other_common_tags:
+            print(f"Other common tags(>={common_percent * 100}%):")
+            print(
+                ", ".join(
+                    [
+                        f"{tag} {count}/{self.file_count}"
+                        for tag, count in other_common_tags
+                    ]
+                )
+            )
+            print("-" * 20)
+            print(", ".join([item[0] for item in other_common_tags]))
+        else:
+            print(f"No not removed tags >={common_percent * 100}% found")
+
+        user_selected_delete_tags = [
+            tag.strip() for tag in input("Select tags to delete: ").split(",")
+        ]
         for tag in user_selected_delete_tags:
             removed_tags_set.add(tag)
+
         
-        with REMOVED_TAGS_PATH.open('w', encoding='utf-8') as f:
+        with REMOVED_TAGS_PATH.open("w", encoding="utf-8") as f:
             json.dump(list(removed_tags_set), f)
 
-        folder = list(self.tags_info.keys())[0].parent.name.replace('_waifuc', '')
+        folder = list(self.tags_info.keys())[0].parent.name.replace("_waifuc", "")
 
-        active_token = input(f'Active token({folder}): ') or folder
-        active_token = active_token.replace('_', ' ') 
-        
+        # 自动添加触发词
+        if 'animestyle' in folder:
+            active_token = 'animestyle'
+        elif 'arca_aiart_style' in folder:
+            active_token = 'arca_aiart_style'
+        else:
+            active_token = input(f"Active token({folder}): ") or folder
+            active_token = active_token.replace("_", " ")
+
         for filename, tags in self.tags_info.items():
-            self.tags_info[filename] = [active_token] + [tag for tag in tags if tag not in removed_tags_set]
+            self.tags_info[filename] = [active_token] + [
+                tag for tag in tags if tag not in removed_tags_set
+            ]
 
         return [(Path(filename), tags) for filename, tags in self.tags_info.items()]
 

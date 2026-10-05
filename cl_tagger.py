@@ -194,7 +194,7 @@ MODEL_OPTIONS = {
     "cl_tagger_1_02": "cl_tagger_1_02/model.onnx",
 }
 DEFAULT_MODEL = "cl_tagger_1_02"
-CACHE_DIR = "./model_cache"
+CACHE_DIR = r"E:\hf-cache"
 
 # Global state variables
 g_onnx_model_path = None

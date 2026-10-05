@@ -210,9 +210,9 @@ def download_images_locally_by_aria2(data_list: list[dict], save_dir: str = './G
         'aria2c',
         '-i', input_file_path,
         '-d', save_dir,
-        '-x', '16', 
-        '-s', '16', 
-        '-j', '16',
+        '-x', '2', 
+        '-s', '1', 
+        '-j', '4',
         '-c',
         '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
         '--all-proxy', 'http://127.0.0.1:10809',
@@ -239,7 +239,6 @@ def download_images_locally_by_aria2(data_list: list[dict], save_dir: str = './G
 # 配置参数 (模拟 Colab 表单输入)
 COOKIE_ENV = 'PHPSESSID=XGH9W6YK5d8TcA%2C5YTFekAlqOcK-nZjn0uTq89ByZJn05%2CvoRqwVglyeQ271a43-GDx1jOrmkdNtfWepBR54Kz01Qg8II2yZNnZvtMvW%2C3wXu38GBGfD4owPb6ZNsyDd; fringeBenefits=yup; comment_threshold=0; post_threshold=0; user_id=582042; pass_hash=cc072643dfecf5772e697e61563cd15ee5b5becd; cf_clearance=rmUen6tdycsIvWRwlmDABLX1Z2c1gJBsKy7c5KyLz6E-1768222789-1.2.1.1-uHEjDITrVrwePHN8SbfmYDlGsuAMtAxpxn9NL.6wiNAnOu.Pb..d3D7UL8E4GkH71dQHgxjalAfg8D59HsxIYffJe3tBizOZ0HEI_REsOd6rbstNs_XmR9MySyq6Zu9t4YXHcQBmADgkmwFJsjIA.VgOpWWhgM0Qi_u4PGco8UUnIHFJLCcqCRmv1BC7NZYM3N0rOL5Ssn.FMczJCIhdaejjjvEPH2vw6prSiiX4v_8; bnState_2099173=%7B%22impressions%22%3A1%2C%22delayStarted%22%3A0%7D; __PPU_cl_tl=zYAAgqFs0mj0bq2hYwYBgqFs0mmcYr2hY1g; bnState_2099169=%7B%22impressions%22%3A1%2C%22delayStarted%22%3A0%7D; UGVyc2lzdFN0b3JhZ2U=%7B%22CAIFRQ%22%3A%22ADU%252B1QAAAAAAAAAD%22%2C%22CAIFRT%22%3A%22ADU%252B1QAAAABpnoHQ%22%2C%22MTIFRQ%22%3A%22AEfd4AAAAAAAAAAD%22%2C%22MTIFRT%22%3A%22AEfd4AAAAABpnoHQ%22%7D; bnState_2099171=%7B%22impressions%22%3A1%2C%22delayStarted%22%3A0%7D'
 MAX_PAGES = 100
-MAX_IMAGES = 80
 
 os.environ['HTTP_PROXY'] = os.environ['HTTPS_PROXY'] = 'http://127.0.0.1:10809'
 
@@ -247,7 +246,9 @@ NEG_TAGS = '-animated'
 
 def main():
     tags = input('Tags: ').strip() + ' ' + NEG_TAGS
-    save_dir = tags.split(' ')[0]
+    MAX_IMAGES = int(input('images count(default: 100): ') or 100)
+
+    save_dir = tags.split(' ')[0].replace(':', '_')
 
     print(f'Crawling {tags}, Output Dir:')
     print(f'{save_dir}')

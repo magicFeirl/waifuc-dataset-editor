@@ -5,11 +5,15 @@ import shutil
 
 from waifuc.action import (
     ModeConvertAction,
+    FirstNSelectAction,
+    FileOrderAction,
     FilterSimilarAction,
     FileExtAction,
     HeadCountAction,
     NoMonochromeAction,
     MinAreaFilterAction,
+    PersonRatioAction,
+    ClassFilterAction,
     PersonSplitAction,
     ThreeStageSplitAction,
 )
@@ -28,30 +32,23 @@ def banner(message):
 
 
 def run_local_source(source: str, dest: str):
-    concept_actions = (
-        HeadCountAction(min_count=1),
-        PersonSplitAction(),
-        # PersonRatioAction(),
-        # MinAreaFilterAction(768),
-        ThreeStageSplitAction(),
-    )
     (LocalSource(str(source), recursive=False)).attach(
-        MinAreaFilterAction(768),
+        # MinAreaFilterAction(768),
         # RandomChoiceAction(p=0.3),
         ModeConvertAction("RGB", "white"),
         NoMonochromeAction(),
+        # ClassFilterAction(["illustration", "bangumi", "3d"]),
         FilterSimilarAction(threshold=0.45),  # threshold <= 0.45 可以被认为是相像的
-        # FaceCountAction(min_count=1),
-        # PersonRatioAction()
-        # ClassFilterAction(["illustration", "bangumi"]),
-        # *concept_actions,
-        # FilterSimilarAction(threshold=0.45),  # threshold <= 0.45 可以被认为是相像的
-        # FileOrderAction(),
+        PersonSplitAction(),
+        # HeadCountAction(min_count=1),
+        ThreeStageSplitAction(),
+        MinAreaFilterAction(768),
+        PersonRatioAction(),
+        FilterSimilarAction(threshold=0.45),  # threshold <= 0.45 可以被认为是相像的
+        FileOrderAction(),
         FileExtAction(ext=".jpg"),
-        # FirstNSelectAction(200),
-    ).export(
-        SaveExporter(dest, no_meta=True)
-    )  # site-packages\waifuc\model\item.py L93 删除了 save_params 参数
+        FirstNSelectAction(200),
+    ).export(SaveExporter(dest, no_meta=True)) # site-packages\waifuc\model\item.py L93 删除了 save_params 参数
 
     return dest.absolute()
 
@@ -71,13 +68,14 @@ def waifuc(path: str):
         dest: Path = Path("./output/") / source.name
 
         if dest.is_dir():
-            print("Rm:", dest)
+            print('Rm:', dest)
             shutil.rmtree(dest, ignore_errors=True)
 
         print("Processing:", source)
         run_local_source(source, dest)
 
         active_tokens = get_active_token(source.name)
+
         tagged = process_image_and_save_tags(image_dir=dest, gen_threshold=0.35)
         for image_path, tags in tagged.items():
             filename = image_path.with_suffix(".txt")
